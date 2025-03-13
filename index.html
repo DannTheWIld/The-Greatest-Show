@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control Panel</title>
+    <script>
+        let players = {};
+        let maxHealth = 5;
+        let questions = [];
+        let currentQuestionIndex = 0;
+
+        // Update the display with current game state
+        function updateDisplay() {
+            const text = document.getElementById("text-input").value;
+            const image = document.getElementById("image-input").value;
+            const animation = document.getElementById("animation-select").value;
+
+            fetch("/update", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ text, image, animation, players, maxHealth, questions, currentQuestionIndex })
+            });
+
+            // Update the question display area
+            displayQuestions();
+        }
+
+        // Display the questions in the control panel
+        function displayQuestions() {
+            const displayArea = document.getElementById("game-questions");
+            displayArea.innerHTML = "";  // Clear previous content
+
+            questions.forEach((q, index) => {
+                const questionElement = document.createElement('div');
+                questionElement.classList.add('question');
+
+                const questionText = document.createElement('p');
+                questionText.textContent = q.questionText;
+                questionElement.appendChild(questionText);
+
+                const alternativesList = document.createElement('ul');
+                q.alternatives.forEach((alt, i) => {
+                    const alternative = document.createElement('li');
+                    alternative.textContent = alt;
+                    alternative.style.color = (i === q.correctAnswer ? 'green' : 'red');
+                    alternativesList.appendChild(alternative);
+                });
+                questionElement.appendChild(alternativesList);
+
+                displayArea.appendChild(questionElement);
+            });
+        }
+
+        // Add player to the game
+        function addPlayer() {
+            const playerName = document.getElementById("player-name").value;
+            const playerColor = document.getElementById("player-color").value;
+
+            if (playerName && playerColor) {
+                if (players[playerName]) {
+                    alert("Player name already exists. Please choose a different name.");
+                    return;
+                }
+                players[playerName] = {
+                    name: playerName,
+                    color: playerColor,
+                    score: 0,
+                    health: maxHealth
+                };
+                updateDisplay();
+                renderPlayers();
+            }
+        }
+
+        // Remove player from the game
+        function removePlayer(playerName) {
+            delete players[playerName];
+            updateDisplay();
+            renderPlayers();
+        }
+
+        // Update player score and health
+        function updatePlayerInfo(playerName) {
+            const score = parseInt(document.getElementById(`${playerName}-score`).value) || 0;
+            const health = parseInt(document.getElementById(`${playerName}-health`).value);
+
+            if (players[playerName]) {
+                players[playerName].score = score;
+                if (health >= 0) {
+                    players[playerName].health = health;
+                }
+                updateDisplay();
+                renderPlayers();
+            }
+        }
+
+        // Update the maximum health value
+        function updateMaxHealth() {
+            const newMaxHealth = parseInt(document.getElementById("max-health").value) || 5;
+            maxHealth = newMaxHealth;
+
+            // Update health of all players to the new max health (or keep their current health)
+            for (const playerName in players) {
+                if (players[playerName].health > newMaxHealth) {
+                    players[playerName].health = newMaxHealth; // Ensure health doesn't exceed max
+                }
+            }
+            updateDisplay();
+            renderPlayers();
+        }
+
+        // Render all players to the UI
+        function renderPlayers() {
+            const playerList = document.getElementById("player-list");
+            playerList.innerHTML = "";
+            for (const name in players) {
+                const player = players[name];
+                playerList.innerHTML += `<li>
+                    ${name} <span style="color: ${player.color};">[Health: ${player.health} ❤]</span>
+                    <label>Score: <input type="number" id="${name}-score" value="${player.score}" oninput="updatePlayerInfo('${name}')"></label>
+                    <label>Health: <input type="number" id="${name}-health" value="${player.health}" oninput="updatePlayerInfo('${name}')"></label>
+                    <button onclick="removePlayer('${name}')">Remove</button>
+                </li>`;
+            }
+        }
+
+        // Add a question to the game
+        function addQuestion() {
+            const questionText = document.getElementById("question-text").value;
+            const alternatives = [
+                document.getElementById("alt1").value,
+                document.getElementById("alt2").value,
+                document.getElementById("alt3").value,
+                document.getElementById("alt4").value
+            ];
+            const correctAnswer = parseInt(document.getElementById("correct-answer").value);
+
+            if (questionText && alternatives.every(alt => alt) && correctAnswer >= 0 && correctAnswer < 4) {
+                questions.push({ questionText, alternatives, correctAnswer, visible: false });
+                updateDisplay();
+                renderQuestions();
+            }
+        }
+
+        // Remove a question from the game
+        function removeQuestion(index) {
+            questions.splice(index, 1);
+            updateDisplay();
+            renderQuestions();
+        }
+
+        // Toggle the visibility of a question
+        function toggleQuestion(index) {
+            questions[index].visible = !questions[index].visible;
+            updateDisplay();
+            renderQuestions();
+        }
+
+        // Render all questions to the UI
+        function renderQuestions() {
+            const list = document.getElementById("question-list");
+            list.innerHTML = "";
+            questions.forEach((q, index) => {
+                list.innerHTML += `<li>
+                    ${q.questionText}
+                    <button onclick="toggleQuestion(${index})">${q.visible ? 'Hide' : 'Show'}</button>
+                    <button onclick="removeQuestion(${index})">Remove</button>
+                </li>`;
+            });
+        }
+
+        // Save questions to a JSON file
+        function saveQuestions() {
+            const blob = new Blob([JSON.stringify(questions, null, 2)], { type: 'application/json' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'questions.json';
+            link.click();
+        }
+
+        // Load questions from a JSON file
+        function loadQuestions(event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    questions = JSON.parse(e.target.result);
+                    renderQuestions();
+                    updateDisplay();
+                } catch (error) {
+                    alert("Failed to load questions. Make sure the file is in JSON format.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Update current question index
+        function updateCurrentQuestionIndex() {
+            const index = parseInt(document.getElementById("current-question-index").value);
+            currentQuestionIndex = index;
+            updateDisplay();
+        }
+    </script>
+</head>
+<body>
+    <h1>Quiz Game Control Panel</h1>
+    
+    <h2>Manage Players</h2>
+    <label>Player Name: <input type="text" id="player-name"></label><br>
+    <label>Player Color: <input type="color" id="player-color"></label><br>
+    <button onclick="addPlayer()">Add Player</button>
+    
+    <ul id="player-list"></ul>
+
+    <label>Text: <input type="text" id="text-input" oninput="updateDisplay()"></label><br>
+    <label>Image URL: <input type="text" id="image-input" oninput="updateDisplay()"></label><br>
+    <label>Animation: 
+        <select id="animation-select" onchange="updateDisplay()">
+            <option value="fade">Fade</option>
+            <option value="slide">Slide</option>
+        </select>
+    </label><br>
+    <label>Max Health: <input type="number" id="max-health" value="5" min="0" oninput="updateMaxHealth()"></label><br>
+    
+    <h2>Questions</h2>
+    <input type="text" id="question-text" placeholder="Question">
+    <input type="text" id="alt1" placeholder="Alternative 1">
+    <input type="text" id="alt2" placeholder="Alternative 2">
+    <input type="text" id="alt3" placeholder="Alternative 3">
+    <input type="text" id="alt4" placeholder="Alternative 4">
+    <select id="correct-answer">
+        <option value="0">1</option>
+        <option value="1">2</option>
+        <option value="2">3</option>
+        <option value="3">4</option>
+    </select>
+    <button onclick="addQuestion()">Add Question</button>
+    <button onclick="saveQuestions()">Save Questions</button>
+    <input type="file" id="file-input" accept=".json" onchange="loadQuestions(event)">
+    <ul id="question-list"></ul>
+
+    <h2>Current Question</h2>
+    <label>Select Current Question: 
+        <select id="current-question-index" onchange="updateCurrentQuestionIndex()">
+            <option value="-1">None</option>
+        </select>
+    </label>
+
+    <h2>Game Display</h2>
+    <div id="game-questions"></div>
+</body>
+</html>
