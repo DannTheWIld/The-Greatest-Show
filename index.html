@@ -128,10 +128,10 @@
             for (const name in players) {
                 const player = players[name];
                 playerList.innerHTML += `<li>
-                    <input type="text" id="${name}-name" value="${player.name}" oninput="updatePlayerInfo('${name}')">
-                    <input type="color" id="${name}-color" value="${player.color}" oninput="updatePlayerInfo('${name}')">
-                    <label>Score: <input type="number" id="${name}-score" value="${player.score}" oninput="updatePlayerInfo('${name}')"></label>
-                    <label>Health: <input type="number" id="${name}-health" value="${player.health}" oninput="updatePlayerInfo('${name}')"></label>
+                    <input type="text" id="${name}-name" value="${player.name}" onchange="updatePlayerInfo('${name}')">
+                    <input type="color" id="${name}-color" value="${player.color}" onchange="updatePlayerInfo('${name}')">
+                    <label>Score: <input type="number" id="${name}-score" value="${player.score}" onchange="updatePlayerInfo('${name}')"></label>
+                    <label>Health: <input type="number" id="${name}-health" value="${player.health}" onchange="updatePlayerInfo('${name}')"></label>
                     <button onclick="removePlayer('${name}')">Remove</button>
                 </li>`;
             }
