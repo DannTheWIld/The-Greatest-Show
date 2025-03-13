@@ -1,121 +1,118 @@
-<display.html>
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Quiz Game Display</title>
-        <style>
-            body {
-                background: transparent;
-                text-align: center;
-                font-size: 2em;
-                transition: all 1s;
-            }
-            img {
-                max-width: 80%;
-                height: auto;
-            }
-            .fade {
-                opacity: 0;
-                animation: fadeIn 1s forwards;
-            }
-            .slide {
-                transform: translateY(-50px);
-                animation: slideIn 1s forwards;
-            }
-            @keyframes fadeIn {
-                to { opacity: 1; }
-            }
-            @keyframes slideIn {
-                to { transform: translateY(0); }
-            }
-            #scoreboard, #question-container {
-                position: absolute;
-                top: 10px;
-                right: 10px;
-                background: rgba(0, 0, 0, 0);
-                color: rgb(48, 3, 211);
-                padding: 10px;
-                border-radius: 10px;
-                text-align: center;
-            }
-            .player-box {
-                padding: -3px;
-                border-radius: 500px;
-                margin: 10px;
-                width: var(--player-box-width, 300px);
-            }
-            .hearts {
-                color: red;
-            }
-            #question-container {
-    position: absolute;
-    top: 70%; /* Adjust this value to control the position from the top */
-    left: 50%;
-    transform: translateX(-50%);
-    width: 80%;
-    max-width: 600px;
-    background: rgba(0, 0, 0, 0.5);
-    padding: 20px;
-    border-radius: 10px;
-    color: white;
-    text-align: center;
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Game Display</title>
+    <style>
+        body {
+            background: transparent;
+            text-align: center;
+            font-size: 2em;
+            transition: all 1s;
+        }
+        img {
+            max-width: 80%;
+            height: auto;
+        }
+        .fade {
+            opacity: 0;
+            animation: fadeIn 1s forwards;
+        }
+        .slide {
+            transform: translateY(-50px);
+            animation: slideIn 1s forwards;
+        }
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+        @keyframes slideIn {
+            to { transform: translateY(0); }
+        }
+        #scoreboard, #question-container {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0);
+            color: rgb(48, 3, 211);
+            padding: 10px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .player-box {
+            padding: -3px;
+            border-radius: 500px;
+            margin: 10px;
+            width: var(--player-box-width, 300px);
+        }
+        .hearts {
+            color: red;
+        }
+        #question-container {
+            position: absolute;
+            top: 70%; /* Adjust this value to control the position from the top */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            max-width: 600px;
+            background: rgba(12, 100, 232, 0.5);
+            padding: 20px;
+            border-radius: 10px;
+            color: rgb(27, 14, 140);
+            text-align: center;
+        }
+        .question {
+            margin-top: -50px;
+        }
+        .alternative {
+            margin: 10px;
+            padding: 20px; /* Adjust padding to ensure more space around the text */
+            background: #0ce1e172;
+            border: none;
+            color: rgb(27, 14, 140);
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 1.5em; /* Increase font size here */
+        }
+        .alternative:hover {
+            background: #0c45e1c0;
+        }
+        .correct {
+            background: green !important;
+        }
+        .incorrect {
+            background: red !important;
+        }
+    </style>
+    <script>
+        async function fetchUpdates() {
+            const res = await fetch("/data");
+            const { text, image, animation, players, maxHealth, questions } = await res.json();
+            
+            document.getElementById("text").innerText = text;
+            document.getElementById("text").className = animation;
+            document.getElementById("image").src = image;
+            
+            renderScoreboard(players, maxHealth);
+            renderQuestions(questions);
+        }
 
-.question {
-    margin-top: -50px;
-}
+        function renderQuestions(questions) {
+            const container = document.getElementById("question-container");
+            container.innerHTML = ""; // Clear previous content
 
-.alternative {
-    margin: 10px;
-    padding: 20px; /* Adjust padding to ensure more space around the text */
-    background: #444;
-    border: none;
-    color: white;
-    cursor: pointer;
-    border-radius: 5px;
-    font-size: 1.5em; /* Increase font size here */
-}
-
-.alternative:hover {
-    background: #666;
-}
-
-.correct {
-    background: green !important;
-}
-
-.incorrect {
-    background: red !important;
-}
-
-
-        </style>
-        <script>
-            async function fetchUpdates() {
-                const res = await fetch("/data");
-                const { text, image, animation, players, maxHealth, questions, currentQuestionIndex } = await res.json();
-                
-                document.getElementById("text").innerText = text;
-                document.getElementById("text").className = animation;
-                document.getElementById("image").src = image;
-                
-                renderScoreboard(players, maxHealth);
-                renderQuestions(questions, currentQuestionIndex);
+            const visibleQuestions = questions.filter(q => q.visible);
+            if (visibleQuestions.length === 0) {
+                container.style.display = "none";
+                return;
             }
-    
-            function renderQuestions(questions, currentIndex) {
-                const container = document.getElementById("question-container");
-                if (currentIndex === -1 || !questions[currentIndex] || !questions[currentIndex].visible) {
-                    container.style.display = "none";
-                    return;
-                }
-    
-                const question = questions[currentIndex];
-                container.style.display = "block";
-                container.innerHTML = `<div class="question"><h3>${question.questionText}</h3>`;
-    
+
+            container.style.display = "block";
+            visibleQuestions.forEach(question => {
+                const questionElement = document.createElement('div');
+                questionElement.classList.add('question');
+                questionElement.innerHTML = `<h3>${question.questionText}</h3>`;
+
                 const alternativesContainer = document.createElement('div');
                 alternativesContainer.classList.add('alternatives-container');
                 
@@ -126,35 +123,36 @@
                     button.onclick = () => showAnswer(i, question.correctAnswer);
                     alternativesContainer.appendChild(button);
                 });
-    
-                container.appendChild(alternativesContainer);
-            }
-    
-            function showAnswer(selected, correct) {
-                document.querySelectorAll(".alternative").forEach((btn, i) => {
-                    btn.className = i === correct ? "alternative correct" : "alternative incorrect";
-                });
-            }
-    
-            function renderScoreboard(players, maxHealth) {
-                const scoreboard = document.getElementById("scoreboard");
-                scoreboard.innerHTML = "<h2>Scoreboard</h2>";
-                Object.keys(players).forEach(name => {
-                    const hearts = "❤".repeat(players[name].health) + "♡".repeat(maxHealth - players[name].health);
-                    scoreboard.innerHTML += `<div class="player-box" style="background: ${players[name].color};">
-                        <p>${name}: ${players[name].score} <span class="hearts">${hearts}</span></p>
-                    </div>`;
-                });
-            }
-    
-            setInterval(fetchUpdates, 1000);
-        </script>
-    </head>
-    <body>
-        <div id="text" class="fade"></div>
-        <img id="image" class="fade">
-        <div id="question-container"></div>
-        <div id="scoreboard"></div>
-    </body>
-    </html>
-    
+
+                questionElement.appendChild(alternativesContainer);
+                container.appendChild(questionElement);
+            });
+        }
+
+        function showAnswer(selected, correct) {
+            document.querySelectorAll(".alternative").forEach((btn, i) => {
+                btn.className = i === correct ? "alternative correct" : "alternative incorrect";
+            });
+        }
+
+        function renderScoreboard(players, maxHealth) {
+            const scoreboard = document.getElementById("scoreboard");
+            scoreboard.innerHTML = "<h2>Scoreboard</h2>";
+            Object.keys(players).forEach(name => {
+                const hearts = "❤".repeat(players[name].health) + "♡".repeat(maxHealth - players[name].health);
+                scoreboard.innerHTML += `<div class="player-box" style="background: ${players[name].color};">
+                    <p>${name}: ${players[name].score} <span class="hearts">${hearts}</span></p>
+                </div>`;
+            });
+        }
+
+        setInterval(fetchUpdates, 1000);
+    </script>
+</head>
+<body>
+    <div id="text" class="fade"></div>
+    <img id="image" class="fade">
+    <div id="question-container"></div>
+    <div id="scoreboard"></div>
+</body>
+</html>

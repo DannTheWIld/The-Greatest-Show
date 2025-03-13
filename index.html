@@ -8,7 +8,6 @@
         let players = {};
         let maxHealth = 5;
         let questions = [];
-        let currentQuestionIndex = 0;
 
         // Update the display with current game state
         function updateDisplay() {
@@ -19,7 +18,7 @@
             fetch("/update", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ text, image, animation, players, maxHealth, questions, currentQuestionIndex })
+                body: JSON.stringify({ text, image, animation, players, maxHealth, questions })
             });
 
             // Update the question display area
@@ -80,15 +79,27 @@
             renderPlayers();
         }
 
-        // Update player score and health
+        // Update player info
         function updatePlayerInfo(playerName) {
+            const newName = document.getElementById(`${playerName}-name`).value;
+            const newColor = document.getElementById(`${playerName}-color`).value;
             const score = parseInt(document.getElementById(`${playerName}-score`).value) || 0;
             const health = parseInt(document.getElementById(`${playerName}-health`).value);
 
             if (players[playerName]) {
-                players[playerName].score = score;
-                if (health >= 0) {
-                    players[playerName].health = health;
+                if (newName !== playerName && players[newName]) {
+                    alert("Player name already exists. Please choose a different name.");
+                    return;
+                }
+                players[newName] = {
+                    ...players[playerName],
+                    name: newName,
+                    color: newColor,
+                    score: score,
+                    health: health >= 0 ? health : players[playerName].health
+                };
+                if (newName !== playerName) {
+                    delete players[playerName];
                 }
                 updateDisplay();
                 renderPlayers();
@@ -117,7 +128,8 @@
             for (const name in players) {
                 const player = players[name];
                 playerList.innerHTML += `<li>
-                    ${name} <span style="color: ${player.color};">[Health: ${player.health} ❤]</span>
+                    <input type="text" id="${name}-name" value="${player.name}" oninput="updatePlayerInfo('${name}')">
+                    <input type="color" id="${name}-color" value="${player.color}" oninput="updatePlayerInfo('${name}')">
                     <label>Score: <input type="number" id="${name}-score" value="${player.score}" oninput="updatePlayerInfo('${name}')"></label>
                     <label>Health: <input type="number" id="${name}-health" value="${player.health}" oninput="updatePlayerInfo('${name}')"></label>
                     <button onclick="removePlayer('${name}')">Remove</button>
@@ -194,13 +206,6 @@
             };
             reader.readAsText(file);
         }
-
-        // Update current question index
-        function updateCurrentQuestionIndex() {
-            const index = parseInt(document.getElementById("current-question-index").value);
-            currentQuestionIndex = index;
-            updateDisplay();
-        }
     </script>
 </head>
 <body>
@@ -240,14 +245,7 @@
     <input type="file" id="file-input" accept=".json" onchange="loadQuestions(event)">
     <ul id="question-list"></ul>
 
-    <h2>Current Question</h2>
-    <label>Select Current Question: 
-        <select id="current-question-index" onchange="updateCurrentQuestionIndex()">
-            <option value="-1">None</option>
-        </select>
-    </label>
-
-    <h2>Game Display</h2>
+    <h2>Question Display</h2>
     <div id="game-questions"></div>
 </body>
 </html>
