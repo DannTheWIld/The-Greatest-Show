@@ -6,6 +6,10 @@
     <title>Quiz Game Display</title>
     <style>
         body {
+            width: 1920px;
+            height: 1080px;
+            margin: 0;
+            overflow: scroll;
             background: transparent;
             text-align: center;
             font-size: 2em;
@@ -33,7 +37,7 @@
             position: absolute;
             top: 10px;
             right: 10px;
-            background: rgba(0, 0, 0, 0);
+            background: rgba(0, 0, 0, 0.652);
             color: rgb(48, 3, 211);
             padding: 10px;
             border-radius: 10px;
@@ -50,19 +54,26 @@
         }
         #question-container {
             position: absolute;
-            top: 70%; /* Adjust this value to control the position from the top */
+            top: 50%; /* Adjust this value to control the position from the top */
             left: 50%;
-            transform: translateX(-50%);
-            width: 80%;
-            max-width: 600px;
+            transform: translate(-50%, -50%);
+            width: 900%;
+            max-width: 900px;
             background: rgba(12, 100, 232, 0.5);
             padding: 20px;
             border-radius: 10px;
             color: rgb(27, 14, 140);
             text-align: center;
+            box-sizing: border-box; /* Ensure padding is included in the width */
+            font-size: 0.7m; /* Increase font size here */
         }
         .question {
             margin-top: -50px;
+        }
+        .alternatives-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
         }
         .alternative {
             margin: 10px;
@@ -72,7 +83,7 @@
             color: rgb(27, 14, 140);
             cursor: pointer;
             border-radius: 5px;
-            font-size: 1.5em; /* Increase font size here */
+            font-size: 0.7em; /* Increase font size here */
         }
         .alternative:hover {
             background: #0c45e1c0;
@@ -83,6 +94,9 @@
         .incorrect {
             background: red !important;
         }
+
+        
+        
     </style>
     <script>
         async function fetchUpdates() {

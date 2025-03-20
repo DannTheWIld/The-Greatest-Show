@@ -21,11 +21,11 @@ app.get("/data", (req, res) => {
 app.listen(port, () => {
     console.log(`Server running at http://localhost:3000/display.html`);
     console.log('');
-    console.log(`Server running at http://localhost:3000/control_panel.html`);
+    console.log(`Server running at http://localhost:3000/index.html`);
     console.log('');
     console.log("Use https://congenial-memory-5gj5xqg4rqvh4p4q-3000.app.github.dev/display.html if working in GitHub Codespaces.");
     console.log('');
-    console.log("Use https://congenial-memory-5gj5xqg4rqvh4p4q-3000.app.github.dev/control_panel.html if working in GitHub Codespaces.");
+    console.log("Use https://congenial-memory-5gj5xqg4rqvh4p4q-3000.app.github.dev/index.html if working in GitHub Codespaces.");
     console.log('');
     console.log("Press Ctrl+C to stop.");
 });
